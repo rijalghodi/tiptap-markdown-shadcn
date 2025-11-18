@@ -8,14 +8,16 @@ import {
   List,
   Code2,
   ChevronRight,
-  Quote, ImageIcon,
-  Minus, AlignLeft,
+  Quote,
+  ImageIcon,
+  Minus,
+  AlignLeft,
   AlignCenter,
   AlignRight,
   CodeSquare,
-  TextQuote
+  TextQuote,
 } from "lucide-react";
-import { FloatingMenu } from "@tiptap/react";
+import { FloatingMenu } from "@tiptap/react/menus";
 import {
   Command,
   CommandEmpty,
@@ -104,7 +106,8 @@ const groups: CommandGroupType[] = [
         description: "Insert an image",
         icon: ImageIcon,
         keywords: "image picture photo",
-        command: (editor) => editor.chain().focus().insertImagePlaceholder().run(),
+        command: (editor) =>
+          editor.chain().focus().insertImagePlaceholder().run(),
       },
       {
         title: "Horizontal Rule",
@@ -185,9 +188,15 @@ export function TipTapFloatingMenu({ editor }: { editor: Editor }) {
           ...group,
           items: group.items.filter(
             (item) =>
-              item.title.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-              item.description.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-              item.keywords.toLowerCase().includes(debouncedSearch.toLowerCase())
+              item.title
+                .toLowerCase()
+                .includes(debouncedSearch.toLowerCase()) ||
+              item.description
+                .toLowerCase()
+                .includes(debouncedSearch.toLowerCase()) ||
+              item.keywords
+                .toLowerCase()
+                .includes(debouncedSearch.toLowerCase())
           ),
         }))
         .filter((group) => group.items.length > 0),
@@ -278,9 +287,14 @@ export function TipTapFloatingMenu({ editor }: { editor: Editor }) {
     const editorElement = editor.options.element;
     const handleEditorKeyDown = (e: Event) => handleKeyDown(e as KeyboardEvent);
 
-    editorElement.addEventListener("keydown", handleEditorKeyDown);
-    return () =>
-      editorElement.removeEventListener("keydown", handleEditorKeyDown);
+    if (editorElement instanceof HTMLElement) {
+      editorElement.addEventListener("keydown", handleEditorKeyDown);
+    }
+    return () => {
+      if (editorElement instanceof HTMLElement) {
+        editorElement.removeEventListener("keydown", handleEditorKeyDown);
+      }
+    };
   }, [handleKeyDown, editor]);
 
   // Add new effect for resetting selectedIndex
@@ -323,17 +337,31 @@ export function TipTapFloatingMenu({ editor }: { editor: Editor }) {
         if (!isOpen) setIsOpen(true);
         return true;
       }}
-      tippyOptions={{
-        placement: "bottom-start",
-        interactive: true,
-        appendTo: () => document.body,
-        onHide: () => {
-          setIsOpen(false);
-          setSelectedIndex(-1);
-        },
-      }}
+      appendTo={() => document.body}
+      // options={{
+      //   placement: "bottom-start",
+      //   // interactive: true,
+      //   // appendTo: () => document.body,
+      //   onHide: () => {
+      //     setIsOpen(false);
+      //     setSelectedIndex(-1);
+      //   },
+      // }}
+      // tippyOptions={{
+      //   placement: "bottom-start",
+      //   interactive: true,
+      //   appendTo: () => document.body,
+      //   onHide: () => {
+      //     setIsOpen(false);
+      //     setSelectedIndex(-1);
+      //   },
+      // }}
     >
-      <Command role="listbox" ref={commandRef} className="z-50 w-72 overflow-hidden rounded-lg border bg-popover shadow-lg">
+      <Command
+        role="listbox"
+        ref={commandRef}
+        className="z-50 w-72 overflow-hidden rounded-lg border bg-popover shadow-lg"
+      >
         <ScrollArea className="max-h-[330px]">
           <CommandList>
             <CommandEmpty className="py-3 text-center text-sm text-muted-foreground">

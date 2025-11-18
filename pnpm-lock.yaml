@@ -77,6 +77,9 @@ importers:
       '@tiptap/extension-underline':
         specifier: ^3.10.7
         version: 3.10.7(@tiptap/core@3.10.7(@tiptap/pm@3.10.7))
+      '@tiptap/markdown':
+        specifier: ^3.10.8
+        version: 3.10.8(@tiptap/core@3.10.7(@tiptap/pm@3.10.7))(@tiptap/pm@3.10.7)
       '@tiptap/pm':
         specifier: ^3.10.7
         version: 3.10.7
@@ -1149,6 +1152,12 @@ packages:
       '@tiptap/core': ^3.10.7
       '@tiptap/pm': ^3.10.7
 
+  '@tiptap/markdown@3.10.8':
+    resolution: {integrity: sha512-C7DHVrRB1dteD1HGJtKbxl2PVu3Sb3j2WYJdd2JiWYh9SUtkAUa4jVYybNxgjE7r3jBhIcyun+mXn78hugZzpQ==}
+    peerDependencies:
+      '@tiptap/core': ^3.10.8
+      '@tiptap/pm': ^3.10.8
+
   '@tiptap/pm@3.10.7':
     resolution: {integrity: sha512-/iiurioqSukJk6CrEtfRpdOEafDybyVPToAllgn7i2XcusXSxJSX+K0GUndMUwVR+UqVOCyMYBTRTnE0hdQqgA==}
 
@@ -2136,6 +2145,11 @@ packages:
 
   markdown-it@14.1.0:
     resolution: {integrity: sha512-a54IwgWPaeBCAAsv13YgmALOF1elABB08FxO9i+r4VFk5Vl4pKokRPeX8u5TCgSsPi6ec1otfLjdOpVcgbpshg==}
+    hasBin: true
+
+  marked@15.0.12:
+    resolution: {integrity: sha512-8dD6FusOQSrpv9Z1rdNMdlSgQOIP880DHqnohobOmYLElGEqAL/JvxvuxZO16r4HtjTlfPRDC1hbvxC9dPN2nA==}
+    engines: {node: '>= 18'}
     hasBin: true
 
   math-intrinsics@1.1.0:
@@ -3597,6 +3611,12 @@ snapshots:
       '@tiptap/core': 3.10.7(@tiptap/pm@3.10.7)
       '@tiptap/pm': 3.10.7
 
+  '@tiptap/markdown@3.10.8(@tiptap/core@3.10.7(@tiptap/pm@3.10.7))(@tiptap/pm@3.10.7)':
+    dependencies:
+      '@tiptap/core': 3.10.7(@tiptap/pm@3.10.7)
+      '@tiptap/pm': 3.10.7
+      marked: 15.0.12
+
   '@tiptap/pm@3.10.7':
     dependencies:
       prosemirror-changeset: 2.3.1
@@ -4800,6 +4820,8 @@ snapshots:
       mdurl: 2.0.0
       punycode.js: 2.3.1
       uc.micro: 2.1.0
+
+  marked@15.0.12: {}
 
   math-intrinsics@1.1.0: {}
 

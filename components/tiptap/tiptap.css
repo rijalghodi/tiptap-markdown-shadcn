@@ -15,7 +15,7 @@
   --editor-bg-default: hsl(0 0% 100%);
   --editor-bg-subtle: hsl(0 0% 98%);
   --editor-bg-muted: hsl(240 5% 96%);
-  
+
   /* Highlight Colors */
   --editor-highlight-default: hsl(0 0% 98%);
   --editor-highlight-gray: hsl(240 5% 96%);
@@ -43,8 +43,13 @@
   --editor-spacing-16: 4rem;
 
   /* Typography */
-  --editor-font-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  --editor-font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --editor-font-sans: var(--font-inter), system-ui, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  /* --editor-font-sans:
+    system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif; */
+  --editor-font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    monospace;
   --editor-font-serif: Georgia, Cambria, "Times New Roman", Times, serif;
 
   /* Animation */
@@ -54,14 +59,16 @@
 
   /* Shadows */
   --editor-shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --editor-shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --editor-shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --editor-shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1),
+    0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --editor-shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1),
+    0 4px 6px -4px rgb(0 0 0 / 0.1);
 }
 
 /* Dark Mode Custom Properties */
 .dark {
-  --editor-text-default: hsl(0 0% 98%);
-  --editor-text-gray: hsl(240 5% 64.9%);
+  --editor-text-default: var(--foreground);
+  --editor-text-gray: var(--muted-foreground);
   --editor-text-brown: hsl(25 95% 53%);
   --editor-text-orange: hsl(24 95% 53%);
   --editor-text-yellow: hsl(48 96% 53%);
@@ -71,7 +78,7 @@
   --editor-text-pink: hsl(336 80% 58%);
   --editor-text-red: hsl(0 84% 60%);
 
-  --editor-bg-default: hsl(240 10% 3.9%);
+  --editor-bg-default: var(--background);
   --editor-bg-subtle: hsl(240 3.7% 15.9%);
   --editor-bg-muted: hsl(240 5% 26%);
 
@@ -86,7 +93,7 @@
   --editor-highlight-pink: hsl(336 80% 10%);
   --editor-highlight-red: hsl(0 84% 10%);
 
-  --editor-border-default: hsl(240 5% 26%);
+  --editor-border-default: var(--border);
   --editor-border-strong: hsl(240 5% 64.9%);
 }
 
@@ -94,7 +101,7 @@
 .ProseMirror {
   caret-color: var(--editor-text-default);
   outline: none;
-  padding: var(--editor-spacing-16) var(--editor-spacing-8);
+  padding: var(--editor-spacing-8) var(--editor-spacing-8);
   margin: 0 auto;
   max-width: 90ch;
   font-family: var(--editor-font-sans);
@@ -134,14 +141,14 @@
 
 /* Typography Styles */
 .ProseMirror p {
-  line-height: 1.75;
+  line-height: 1.625;
   margin: var(--editor-spacing-4) 0;
   color: var(--editor-text-default);
   font-size: 1.125rem;
 }
 
 .ProseMirror > p {
-  margin: var(--editor-spacing-6) 0;
+  margin: var(--editor-spacing-4) 0;
 }
 
 .ProseMirror h1,
@@ -149,8 +156,8 @@
 .ProseMirror h3,
 .ProseMirror h4 {
   font-family: var(--editor-font-sans);
-  font-weight: 700;
-  letter-spacing: -0.025em;
+  font-weight: 600;
+  letter-spacing: 0.01em;
   color: var(--editor-text-default);
   scroll-margin-top: var(--editor-spacing-16);
   line-height: 1.2;
@@ -167,7 +174,7 @@
 }
 
 .ProseMirror h3 {
-  font-size: 1.5rem;
+  font-size: 1.75rem;
   margin: var(--editor-spacing-6) 0 var(--editor-spacing-3);
 }
 
@@ -236,8 +243,12 @@
 }
 
 .ProseMirror li {
-  margin: var(--editor-spacing-2) 0;
+  margin: var(--editor-spacing-1) 0;
   padding-left: var(--editor-spacing-2);
+}
+
+.ProseMirror li > p {
+  margin: 0;
 }
 
 .ProseMirror ul {
@@ -385,17 +396,33 @@
     padding: var(--editor-spacing-8) var(--editor-spacing-4);
   }
 
-  .ProseMirror h1 { font-size: 2rem; }
-  .ProseMirror h2 { font-size: 1.75rem; }
-  .ProseMirror h3 { font-size: 1.5rem; }
-  .ProseMirror h4 { font-size: 1.25rem; }
-  .ProseMirror p { font-size: 1rem; }
+  .ProseMirror h1 {
+    font-size: 2rem;
+  }
+  .ProseMirror h2 {
+    font-size: 1.75rem;
+  }
+  .ProseMirror h3 {
+    font-size: 1.5rem;
+  }
+  .ProseMirror h4 {
+    font-size: 1.25rem;
+  }
+  .ProseMirror p {
+    font-size: 1rem;
+  }
 }
 
 /* Animations */
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(-8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Print Styles */

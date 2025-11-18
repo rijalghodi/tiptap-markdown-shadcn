@@ -39,7 +39,7 @@ export const EditorToolbar = ({ editor }: { editor: Editor }) => {
                 <HeadingsToolbar />
                 <BlockquoteToolbar />
                 <CodeToolbar />
-                <CodeBlockToolbar/>
+                <CodeBlockToolbar />
                 <Separator orientation="vertical" className="mx-1 h-7" />
 
                 {/* Basic Formatting Group */}
@@ -57,13 +57,13 @@ export const EditorToolbar = ({ editor }: { editor: Editor }) => {
                 <Separator orientation="vertical" className="mx-1 h-7" />
 
                 {/* Alignment Group */}
-                <AlignmentTooolbar />
-                <Separator orientation="vertical" className="mx-1 h-7" />
+                {/* <AlignmentTooolbar />
+                <Separator orientation="vertical" className="mx-1 h-7" /> */}
 
                 {/* Media & Styling Group */}
-                <ImagePlaceholderToolbar />
+                {/* <ImagePlaceholderToolbar />
                 <ColorHighlightToolbar />
-                <Separator orientation="vertical" className="mx-1 h-7" />
+                <Separator orientation="vertical" className="mx-1 h-7" /> */}
 
                 <div className="flex-1" />
 
