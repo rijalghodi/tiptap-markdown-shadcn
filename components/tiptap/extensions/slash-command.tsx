@@ -113,17 +113,31 @@ export const SlashCommandExtension = Extension.create({
                 " "
               );
 
-              const isRemoveSlashCommand =
-                currentLineText === "/" &&
-                $from.parent.type.name !== "codeBlock";
+              const isSlashCommandOpened =
+                currentLineText.startsWith("/") &&
+                $from.parent.type.name !== "codeBlock" &&
+                $from.parentOffset === currentLineText.length;
 
-              if (isRemoveSlashCommand) {
+              if (isSlashCommandOpened) {
+                window.dispatchEvent(
+                  new CustomEvent("slash-menu-search", {
+                    detail: {
+                      text: currentLineText.slice(1, -1).trim(),
+                    },
+                  })
+                );
+              }
+
+              const isBackspaceInSlashCommand =
+                isSlashCommandOpened && currentLineText.length === 1;
+
+              if (isBackspaceInSlashCommand) {
                 window.dispatchEvent(new CustomEvent("slash-menu-close"));
               }
             }
             return false;
           },
-          handleTextInput(view, from, to, text) {
+          handleTextInput(view, _from, _to, text) {
             const { state } = view;
             const { $from } = state.selection;
             const currentLineText = $from.parent.textBetween(
@@ -142,10 +156,11 @@ export const SlashCommandExtension = Extension.create({
               $from.parentOffset === currentLineText.length;
 
             if (isSlashCommand) {
+              window.dispatchEvent(new CustomEvent("slash-menu-open"));
               window.dispatchEvent(
-                new CustomEvent("slash-menu-open", {
+                new CustomEvent("slash-menu-search", {
                   detail: {
-                    text: updatedLineText,
+                    text: updatedLineText.slice(1).trim(),
                   },
                 })
               );
@@ -254,21 +269,36 @@ export const SlashCommand = ({ editor }: { editor: Editor }) => {
   );
 
   useEffect(() => {
-    function openSlashMenu() {
+    function openSlashMenu(e: any) {
       setOpen(true);
+      // Ensure editor maintains focus when menu opens
+      // if (editor) {
+      //   // Use setTimeout to ensure focus happens after state updates
+      //   setTimeout(() => {
+      //     editor.view.focus();
+      //   }, 0);
+      // }
     }
 
     function closeSlashMenu() {
       setOpen(false);
     }
 
+    function searchSlashMenu(e: any) {
+      const { text } = e.detail;
+      console.log("slash-commmand, searchSlashMenu", text);
+      setSearch(text);
+    }
+
     window.addEventListener("slash-menu-open", openSlashMenu);
     window.addEventListener("slash-menu-close", closeSlashMenu);
+    window.addEventListener("slash-menu-search", searchSlashMenu);
     return () => {
       window.removeEventListener("slash-menu-open", openSlashMenu);
       window.removeEventListener("slash-menu-close", closeSlashMenu);
+      window.removeEventListener("slash-menu-search", searchSlashMenu);
     };
-  }, []);
+  }, [editor]);
 
   useEffect(() => {
     if (!editor || !open) return;
@@ -303,9 +333,15 @@ export const SlashCommand = ({ editor }: { editor: Editor }) => {
 
   useEffect(() => {
     if (selectedIndex >= 0 && itemRefs.current[selectedIndex]) {
-      itemRefs.current[selectedIndex]?.focus();
+      // Scroll the selected item into view without stealing focus from editor
+      itemRefs.current[selectedIndex]?.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+      });
+      // Ensure editor maintains focus
+      editor?.view.focus();
     }
-  }, [selectedIndex]);
+  }, [selectedIndex, editor]);
 
   return (
     <div
