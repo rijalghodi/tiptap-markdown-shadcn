@@ -32,6 +32,10 @@ import {
   SlashCommandExtension,
   SlashCommand,
 } from "./extensions/slash-command";
+import {
+  FloatingToolbarCustomExtension,
+  FloatingToolbarCustom,
+} from "./extensions/floating-toolbar-custom";
 
 const extensions = [
   StarterKit.configure({
@@ -84,6 +88,7 @@ const extensions = [
   Typography,
   Markdown,
   SlashCommandExtension,
+  FloatingToolbarCustomExtension,
 ];
 
 export interface RichTextEditorRef {
@@ -148,6 +153,7 @@ export const RichTextEditorDemo = forwardRef<
       <EditorToolbar editor={editor} />
       {/* <FloatingToolbar editor={editor} />
       <TipTapFloatingMenu editor={editor} /> */}
+      <FloatingToolbarCustom editor={editor} />
       <SlashCommand editor={editor} />
       <EditorContent
         editor={editor}
