@@ -4,10 +4,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useFloating, offset, flip, shift } from "@floating-ui/react-dom";
 import { cn } from "@/lib/utils";
 import {
-  Code,
   List,
   Minus,
-  Quote,
   TextQuote,
   ChevronRight,
   Heading1,
@@ -16,12 +14,7 @@ import {
   ListOrdered,
   Code2,
 } from "lucide-react";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandItem,
-} from "@/components/ui/command";
+import { Command, CommandEmpty, CommandItem } from "@/components/ui/command";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { CommandList } from "@/components/ui/command";
 
@@ -110,7 +103,6 @@ export const SlashCommandExtension = Extension.create({
       new Plugin({
         props: {
           handleKeyDown(view, event) {
-            console.log("slash-commmand, handleKeyDown", event.key);
             if (event.key === "Backspace") {
               const { state } = view;
               const { $from } = state.selection;
@@ -131,8 +123,6 @@ export const SlashCommandExtension = Extension.create({
             }
             return false;
           },
-          // This only runs for text input (inserted text), not for deletions like Backspace.
-          // To handle Backspace, you also need to implement handleKeyDown or handleDOMEvents.
           handleTextInput(view, from, to, text) {
             const { state } = view;
             const { $from } = state.selection;
@@ -143,6 +133,7 @@ export const SlashCommandExtension = Extension.create({
               " "
             );
 
+            // Simulate updated line text by inserting text
             const updatedLineText = currentLineText + text;
 
             const isSlashCommand =
@@ -150,30 +141,7 @@ export const SlashCommandExtension = Extension.create({
               $from.parent.type.name !== "codeBlock" &&
               $from.parentOffset === currentLineText.length;
 
-            console.log("slash-commmand, isSlashCommand", isSlashCommand);
-            console.log("slash-commmand, currentLineText", currentLineText);
-            console.log("slash-commmand, text.length", text.length);
-            console.log(
-              "slash-commmand, currentLineText.length",
-              currentLineText.length
-            );
-            console.log(
-              "slash-commmand, $from.parent.type.name",
-              $from.parent.type.name
-            );
-            console.log(
-              "slash-commmand, $from.parent.textContent",
-              $from.parent.textContent
-            );
-            console.log(
-              "slash-commmand, $from.parentOffset",
-              $from.parentOffset
-            );
-            console.log("slash-commmand, $from", $from);
-            console.log("slash-commmand, text", text);
-
             if (isSlashCommand) {
-              // munculkan menu di posisi ini
               window.dispatchEvent(
                 new CustomEvent("slash-menu-open", {
                   detail: {
@@ -193,46 +161,14 @@ export const SlashCommandExtension = Extension.create({
 export const SlashCommand = ({ editor }: { editor: Editor }) => {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
-  const commandRef = useRef<HTMLDivElement>(null);
   const [selectedIndex, setSelectedIndex] = useState(-1);
+  const commandRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
   const { refs, floatingStyles, update } = useFloating({
     placement: "bottom-start",
     middleware: [offset(6), flip(), shift()],
   });
 
-  // Handle the open and close of the menu
-  useEffect(() => {
-    function openSlashMenu(e: any) {
-      console.log("slash-commmand, openSlashMenu", e);
-      setOpen(true);
-    }
-
-    function closeSlashMenu(e: any) {
-      console.log("slash-commmand, closeSlashMenu", e);
-      setOpen(false);
-    }
-
-    window.addEventListener("slash-menu-open", openSlashMenu);
-    window.addEventListener("slash-menu-close", closeSlashMenu);
-    return () => {
-      window.removeEventListener("slash-menu-open", openSlashMenu);
-      window.removeEventListener("slash-menu-close", closeSlashMenu);
-    };
-  }, []);
-
-  // Handle the position of the menu
-  useEffect(() => {
-    if (!editor || !open) return;
-
-    const { from } = editor.state.selection;
-    const dom = editor.view.domAtPos(from).node;
-
-    refs.setReference(dom as Element);
-    update();
-  }, [open, editor]);
-
-  //  Handle execute command
   const executeCommand = useCallback(
     (commandFn: (editor: Editor) => void) => {
       if (!editor) return;
@@ -262,7 +198,6 @@ export const SlashCommand = ({ editor }: { editor: Editor }) => {
     [editor, search]
   );
 
-  // Handle filter menu items
   const filteredMenuItems = useMemo(
     () =>
       menuItems.filter(
@@ -274,7 +209,6 @@ export const SlashCommand = ({ editor }: { editor: Editor }) => {
     [search]
   );
 
-  // Hanndle search and arrow keys
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       if (!open || !editor) return;
@@ -320,6 +254,33 @@ export const SlashCommand = ({ editor }: { editor: Editor }) => {
   );
 
   useEffect(() => {
+    function openSlashMenu() {
+      setOpen(true);
+    }
+
+    function closeSlashMenu() {
+      setOpen(false);
+    }
+
+    window.addEventListener("slash-menu-open", openSlashMenu);
+    window.addEventListener("slash-menu-close", closeSlashMenu);
+    return () => {
+      window.removeEventListener("slash-menu-open", openSlashMenu);
+      window.removeEventListener("slash-menu-close", closeSlashMenu);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!editor || !open) return;
+
+    const { from } = editor.state.selection;
+    const dom = editor.view.domAtPos(from).node;
+
+    refs.setReference(dom as Element);
+    update();
+  }, [open, editor, refs, update]);
+
+  useEffect(() => {
     if (!editor?.options.element) return;
 
     const editorElement = editor.options.element;
@@ -336,12 +297,10 @@ export const SlashCommand = ({ editor }: { editor: Editor }) => {
       );
   }, [handleKeyDown, editor]);
 
-  // Auto-select active item
   useEffect(() => {
     setSelectedIndex(filteredMenuItems.length > 0 && open ? 0 : -1);
-  }, [filteredMenuItems, open]);
+  }, [filteredMenuItems.length, open]);
 
-  // Auto-focus active item (to scroll)
   useEffect(() => {
     if (selectedIndex >= 0 && itemRefs.current[selectedIndex]) {
       itemRefs.current[selectedIndex]?.focus();
@@ -349,62 +308,55 @@ export const SlashCommand = ({ editor }: { editor: Editor }) => {
   }, [selectedIndex]);
 
   return (
-    <div>
-      <div>isOpen: {open.toString()}</div>
-      <div>selectedIndex: {selectedIndex}</div>
-
-      <div
-        ref={refs.setFloating}
-        style={{ ...floatingStyles, display: open ? "block" : "none" }}
-        className="z-50"
+    <div
+      ref={refs.setFloating}
+      style={{ ...floatingStyles, display: open ? "block" : "none" }}
+      className="z-50"
+    >
+      <Command
+        role="listbox"
+        ref={commandRef}
+        className="w-72 overflow-hidden rounded-lg border bg-popover shadow-lg"
       >
-        <Command
-          role="listbox"
-          ref={commandRef}
-          className="w-72 overflow-hidden rounded-lg border bg-popover shadow-lg"
-        >
-          <ScrollArea className="max-h-[330px]">
-            <CommandList>
-              <CommandEmpty className="py-3 text-center text-sm text-muted-foreground">
-                No results found
-              </CommandEmpty>
+        <ScrollArea className="max-h-[330px]">
+          <CommandList>
+            <CommandEmpty className="py-3 text-center text-sm text-muted-foreground">
+              No results found
+            </CommandEmpty>
 
-              {filteredMenuItems.map((item, itemIndex) => {
-                return (
-                  <CommandItem
-                    role="option"
-                    key={`${item.title}-${itemIndex}`}
-                    value={`${item.title}`}
-                    onSelect={() => executeCommand(item.command)}
-                    className={cn(
-                      "gap-3",
-                      itemIndex === selectedIndex ? "bg-accent/50" : ""
-                    )}
-                    aria-selected={itemIndex === selectedIndex}
-                    ref={(el) => {
-                      itemRefs.current[itemIndex] = el;
-                    }}
-                    tabIndex={itemIndex === selectedIndex ? 0 : -1}
-                  >
-                    <div className="flex h-9 w-9 items-center justify-center rounded-md border bg-background">
-                      <item.icon className="h-4 w-4" />
-                    </div>
-                    <div className="flex flex-1 flex-col">
-                      <span className="text-sm font-medium">{item.title}</span>
-                      <span className="text-xs text-muted-foreground">
-                        {item.description}
-                      </span>
-                    </div>
-                    <kbd className="ml-auto flex h-5 items-center rounded bg-muted px-1.5 text-xs text-muted-foreground">
-                      ↵
-                    </kbd>
-                  </CommandItem>
-                );
-              })}
-            </CommandList>
-          </ScrollArea>
-        </Command>
-      </div>
+            {filteredMenuItems.map((item, itemIndex) => (
+              <CommandItem
+                role="option"
+                key={`${item.title}-${itemIndex}`}
+                value={item.title}
+                onSelect={() => executeCommand(item.command)}
+                className={cn(
+                  "gap-3",
+                  itemIndex === selectedIndex ? "bg-accent/50" : ""
+                )}
+                aria-selected={itemIndex === selectedIndex}
+                ref={(el) => {
+                  itemRefs.current[itemIndex] = el;
+                }}
+                tabIndex={itemIndex === selectedIndex ? 0 : -1}
+              >
+                <div className="flex h-9 w-9 items-center justify-center rounded-md border bg-background">
+                  <item.icon className="h-4 w-4" />
+                </div>
+                <div className="flex flex-1 flex-col">
+                  <span className="text-sm font-medium">{item.title}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {item.description}
+                  </span>
+                </div>
+                <kbd className="ml-auto flex h-5 items-center rounded bg-muted px-1.5 text-xs text-muted-foreground">
+                  ↵
+                </kbd>
+              </CommandItem>
+            ))}
+          </CommandList>
+        </ScrollArea>
+      </Command>
     </div>
   );
 };
