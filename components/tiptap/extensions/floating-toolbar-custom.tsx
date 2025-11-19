@@ -31,82 +31,14 @@ export const FloatingToolbarCustomExtension = Extension.create({
         props: {
           handleDOMEvents: {
             selectionchange: () => {
-              // Dispatch custom event when selection changes
               window.dispatchEvent(new CustomEvent("floating-toolbar-update"));
               return false;
             },
           },
         },
-        // view() {
-        //   let lastFrom: number | null = null;
-        //   let lastTo: number | null = null;
-
-        //   return {
-        //     update(view, prevState) {
-        //       const sel = view.state.selection;
-
-        //       const finished =
-        //         !sel.empty && // selection exists (not collapsed)
-        //         (sel.from !== lastFrom || // and selection changed
-        //           sel.to !== lastTo);
-
-        //       if (finished) {
-        //         lastFrom = sel.from;
-        //         lastTo = sel.to;
-
-        //         window.dispatchEvent(
-        //           new CustomEvent("floating-toolbar-update", {
-        //             detail: {
-        //               from: sel.from,
-        //               to: sel.to,
-        //             },
-        //           })
-        //         );
-        //       }
-        //     },
-        //   };
-        // },
-        /*
-          `selectionSet` is a boolean property on a ProseMirror Transaction that indicates
-          whether the selection in the document was updated as part of that transaction.
-          If `selectionSet` is true, it means the selection has changed.
-
-          `docChanged` is a boolean property on a ProseMirror Transaction that indicates
-          whether the document itself (its content/nodes) was changed as a result of the transaction.
-          If `docChanged` is true, it means the document structure or content was modified.
-        */
         appendTransaction(transactions, oldState, newState) {
-          // ProseMirror's EditorState does not directly store a "timestamp".
-          // However, the transactions array contains Transaction objects,
-          // and each Transaction does have a `time` property indicating
-          // when it was created (as a timestamp in milliseconds).
-
-          // You can, for example, get the time of the last transaction applied:
-          const lastTransaction = transactions[transactions.length - 1];
-          const lastTransactionTime = lastTransaction
-            ? lastTransaction.time
-            : null;
-
-          // You can also look at the first transaction (if you want a range):
-          const firstTransaction = transactions[0];
-          const firstTransactionTime = firstTransaction
-            ? firstTransaction.time
-            : null;
-
-          // oldState and newState themselves don't have a time,
-          // but you can infer transition times based on the transactions.
-          // For debugging purposes, you could log them:
-          // console.log('firstTransactionTime', firstTransactionTime, 'lastTransactionTime', lastTransactionTime);
-
           if (transactions.some((tr) => tr.selectionSet || tr.docChanged)) {
-            window.dispatchEvent(
-              new CustomEvent("floating-toolbar-update", {
-                detail: {
-                  firstTransactionTime,
-                  lastTransactionTime,
-                },
-              })
-            );
+            window.dispatchEvent(new CustomEvent("floating-toolbar-update"));
           }
           return null;
         },
@@ -122,7 +54,6 @@ export const FloatingToolbarCustom = ({
 }) => {
   const [open, setOpen] = useState(false);
   const [isSelecting, setIsSelecting] = useState(false);
-  const openDebounced = useDebounce(open, 150); // Debounce to ensure selection is stable
 
   const { refs, floatingStyles, update } = useFloating({
     placement: "bottom",
@@ -323,12 +254,12 @@ export const FloatingToolbarCustom = ({
     };
   }, [editor]);
 
-  if (!editor || !openDebounced) return null;
+  if (!editor || !open) return null;
 
   return (
     <div
       ref={refs.setFloating}
-      style={{ ...floatingStyles, display: openDebounced ? "block" : "none" }}
+      style={{ ...floatingStyles, display: open ? "block" : "none" }}
       className="z-50"
     >
       <TooltipProvider>
