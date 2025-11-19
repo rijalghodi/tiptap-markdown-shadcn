@@ -47,7 +47,7 @@ type CommandGroupType = {
 
 const groups: CommandGroupType[] = [
   {
-    group: "Basic blocks",
+    group: "Blocks",
     items: [
       {
         title: "Text",
@@ -102,12 +102,11 @@ const groups: CommandGroupType[] = [
         command: (editor) => editor.chain().focus().toggleCodeBlock().run(),
       },
       {
-        title: "Image",
-        description: "Insert an image",
-        icon: ImageIcon,
-        keywords: "image picture photo",
-        command: (editor) =>
-          editor.chain().focus().insertImagePlaceholder().run(),
+        title: "Blockquote",
+        description: "Block quote",
+        icon: TextQuote,
+        keywords: "blockquote quote",
+        command: (editor) => editor.chain().focus().toggleBlockquote().run(),
       },
       {
         title: "Horizontal Rule",
@@ -115,32 +114,6 @@ const groups: CommandGroupType[] = [
         icon: Minus,
         keywords: "horizontal rule divider",
         command: (editor) => editor.chain().focus().setHorizontalRule().run(),
-      },
-    ],
-  },
-  {
-    group: "Inline",
-    items: [
-      {
-        title: "Quote",
-        description: "Capture a quotation",
-        icon: Quote,
-        keywords: "blockquote cite",
-        command: (editor) => editor.chain().focus().toggleBlockquote().run(),
-      },
-      {
-        title: "Code",
-        description: "Inline code snippet",
-        icon: CodeSquare,
-        keywords: "code inline",
-        command: (editor) => editor.chain().focus().toggleCode().run(),
-      },
-      {
-        title: "Blockquote",
-        description: "Block quote",
-        icon: TextQuote,
-        keywords: "blockquote quote",
-        command: (editor) => editor.chain().focus().toggleBlockquote().run(),
       },
     ],
   },
@@ -152,8 +125,7 @@ export function TipTapFloatingMenu({ editor }: { editor: Editor }) {
   const commandRef = useRef<HTMLDivElement>(null);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
-  // const previousQueryRef = useRef<string>("");
-  // const debouncedSearch = useDebounce(previousQueryRef.current, 100);
+
   const [slashPosition, setSlashPosition] = useState<{
     left: number;
     top: number;
