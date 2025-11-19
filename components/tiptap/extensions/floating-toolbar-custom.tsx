@@ -31,41 +31,84 @@ export const FloatingToolbarCustomExtension = Extension.create({
         props: {
           handleDOMEvents: {
             selectionchange: () => {
-              console.log("selectionchange event DOM");
               // Dispatch custom event when selection changes
               window.dispatchEvent(new CustomEvent("floating-toolbar-update"));
               return false;
             },
           },
         },
-        view() {
-          let lastFrom: number | null = null;
-          let lastTo: number | null = null;
+        // view() {
+        //   let lastFrom: number | null = null;
+        //   let lastTo: number | null = null;
 
-          return {
-            update(view, prevState) {
-              const sel = view.state.selection;
+        //   return {
+        //     update(view, prevState) {
+        //       const sel = view.state.selection;
 
-              const finished =
-                !sel.empty && // selection exists (not collapsed)
-                (sel.from !== lastFrom || // and selection changed
-                  sel.to !== lastTo);
+        //       const finished =
+        //         !sel.empty && // selection exists (not collapsed)
+        //         (sel.from !== lastFrom || // and selection changed
+        //           sel.to !== lastTo);
 
-              if (finished) {
-                lastFrom = sel.from;
-                lastTo = sel.to;
+        //       if (finished) {
+        //         lastFrom = sel.from;
+        //         lastTo = sel.to;
 
-                window.dispatchEvent(
-                  new CustomEvent("floating-toolbar-update", {
-                    detail: {
-                      from: sel.from,
-                      to: sel.to,
-                    },
-                  })
-                );
-              }
-            },
-          };
+        //         window.dispatchEvent(
+        //           new CustomEvent("floating-toolbar-update", {
+        //             detail: {
+        //               from: sel.from,
+        //               to: sel.to,
+        //             },
+        //           })
+        //         );
+        //       }
+        //     },
+        //   };
+        // },
+        /*
+          `selectionSet` is a boolean property on a ProseMirror Transaction that indicates
+          whether the selection in the document was updated as part of that transaction.
+          If `selectionSet` is true, it means the selection has changed.
+
+          `docChanged` is a boolean property on a ProseMirror Transaction that indicates
+          whether the document itself (its content/nodes) was changed as a result of the transaction.
+          If `docChanged` is true, it means the document structure or content was modified.
+        */
+        appendTransaction(transactions, oldState, newState) {
+          // ProseMirror's EditorState does not directly store a "timestamp".
+          // However, the transactions array contains Transaction objects,
+          // and each Transaction does have a `time` property indicating
+          // when it was created (as a timestamp in milliseconds).
+
+          // You can, for example, get the time of the last transaction applied:
+          const lastTransaction = transactions[transactions.length - 1];
+          const lastTransactionTime = lastTransaction
+            ? lastTransaction.time
+            : null;
+
+          // You can also look at the first transaction (if you want a range):
+          const firstTransaction = transactions[0];
+          const firstTransactionTime = firstTransaction
+            ? firstTransaction.time
+            : null;
+
+          // oldState and newState themselves don't have a time,
+          // but you can infer transition times based on the transactions.
+          // For debugging purposes, you could log them:
+          // console.log('firstTransactionTime', firstTransactionTime, 'lastTransactionTime', lastTransactionTime);
+
+          if (transactions.some((tr) => tr.selectionSet || tr.docChanged)) {
+            window.dispatchEvent(
+              new CustomEvent("floating-toolbar-update", {
+                detail: {
+                  firstTransactionTime,
+                  lastTransactionTime,
+                },
+              })
+            );
+          }
+          return null;
         },
       }),
     ];
@@ -78,16 +121,16 @@ export const FloatingToolbarCustom = ({
   editor: Editor | null;
 }) => {
   const [open, setOpen] = useState(false);
-  const openDebounced = useDebounce(open, 100);
+  const [isSelecting, setIsSelecting] = useState(false);
+  const openDebounced = useDebounce(open, 150); // Debounce to ensure selection is stable
 
-  const isMobile = useMediaQuery("(max-width: 640px)");
   const { refs, floatingStyles, update } = useFloating({
     placement: "bottom",
     middleware: [offset(10), flip(), shift()],
   });
 
   const shouldShow = useCallback(() => {
-    if (!editor || isMobile) return false;
+    if (!editor) return false;
 
     const { state } = editor;
     const { selection } = state;
@@ -103,10 +146,11 @@ export const FloatingToolbarCustom = ({
     const $from = state.doc.resolve(from);
     if ($from.parent.type.name === "codeBlock") return false;
 
-    // Don't show if selection is not finished
+    // Don't show if user is actively selecting
+    if (isSelecting) return false;
 
     return true;
-  }, [editor, isMobile]);
+  }, [editor, isSelecting]);
 
   const updatePosition = useCallback(() => {
     if (!editor || !open) return;
@@ -154,69 +198,132 @@ export const FloatingToolbarCustom = ({
   }, [editor, open, refs, update]);
 
   useEffect(() => {
-    if (!editor || isMobile) {
+    if (!editor) {
       setOpen(false);
       return;
     }
 
     const handleUpdate = () => {
-      console.log("floating-toolbar-custom, handleUpdate in useEffect");
-      const shouldShowToolbar = shouldShow();
-      console.log(
-        "floating-toolbar-custom, shouldShowToolbar in useEffect",
-        shouldShowToolbar
-      );
-      setOpen(shouldShowToolbar);
+      // Only update if not actively selecting
+      if (!isSelecting) {
+        const shouldShowToolbar = shouldShow();
+        setOpen(shouldShowToolbar);
 
-      if (shouldShowToolbar) {
-        // Update position after a short delay to ensure DOM is ready
-        requestAnimationFrame(() => {
-          updatePosition();
-        });
+        if (shouldShowToolbar) {
+          // Update position after a short delay to ensure DOM is ready
+          requestAnimationFrame(() => {
+            updatePosition();
+          });
+        }
       }
     };
 
     // Listen to custom events from the extension
     window.addEventListener("floating-toolbar-update", handleUpdate);
 
-    // Also listen to editor updates
-    // const handleEditorUpdate = () => {
-    //   handleUpdate();
-    // };
-
-    // editor.on("selectionUpdate", handleEditorUpdate);
-    // editor.on("update", handleEditorUpdate);
-    // editor.on("focus", handleUpdate);
-    // editor.on("blur", () => setOpen(false));
-
     // Initial check
     handleUpdate();
 
     return () => {
       window.removeEventListener("floating-toolbar-update", handleUpdate);
-      // editor.off("selectionUpdate", handleEditorUpdate);
-      // editor.off("update", handleEditorUpdate);
-      // editor.off("focus", handleUpdate);
-      // editor.off("blur", () => setOpen(false));
     };
-  }, [editor, isMobile, shouldShow, updatePosition]);
+  }, [editor, shouldShow, updatePosition, isSelecting]);
 
-  // // Prevent default context menu on mobile
-  // useEffect(() => {
-  //   if (!editor?.options.element || !isMobile) return;
+  // Track mouse events to detect when user is actively selecting
+  useEffect(() => {
+    if (!editor) return;
 
-  //   const handleContextMenu = (e: Event) => {
-  //     e.preventDefault();
-  //   };
+    const editorElement = editor.view.dom;
+    if (!(editorElement instanceof HTMLElement)) return;
 
-  //   const el = editor.options.element;
-  //   if (el instanceof HTMLElement) {
-  //     el.addEventListener("contextmenu", handleContextMenu);
-  //     return () => el.removeEventListener("contextmenu", handleContextMenu);
-  //   }
-  // }, [editor, isMobile]);
+    let mouseDown = false;
+    let isDragging = false;
 
-  if (!editor || isMobile || !openDebounced) return null;
+    const handleMouseDown = (e: MouseEvent) => {
+      // Only track if it's a left mouse button click
+      if (e.button === 0) {
+        mouseDown = true;
+        setIsSelecting(true);
+        setOpen(false); // Hide toolbar when starting to select
+      }
+    };
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (mouseDown) {
+        isDragging = true;
+        setIsSelecting(true);
+        setOpen(false); // Keep toolbar hidden while dragging
+      }
+    };
+
+    const handleMouseUp = () => {
+      if (mouseDown) {
+        mouseDown = false;
+        isDragging = false;
+
+        // Small delay to ensure selection is updated in ProseMirror
+        setTimeout(() => {
+          setIsSelecting(false);
+          // Trigger update to show toolbar after selection is complete
+          window.dispatchEvent(new CustomEvent("floating-toolbar-update"));
+        }, 50);
+      }
+    };
+
+    // Also handle touch events for mobile
+    const handleTouchStart = () => {
+      setIsSelecting(true);
+      setOpen(false);
+    };
+
+    const handleTouchMove = () => {
+      setIsSelecting(true);
+      setOpen(false);
+    };
+
+    const handleTouchEnd = () => {
+      setTimeout(() => {
+        setIsSelecting(false);
+        window.dispatchEvent(new CustomEvent("floating-toolbar-update"));
+      }, 100); // Slightly longer delay for touch
+    };
+
+    // Listen to selection changes to detect keyboard selection
+    const handleSelectionChange = () => {
+      // If selection changes but mouse is not down, it might be keyboard selection
+      if (!mouseDown) {
+        // Check if there's an active selection
+        const selection = window.getSelection();
+        if (selection && selection.toString().length > 0) {
+          // Small delay to ensure ProseMirror has updated
+          setTimeout(() => {
+            setIsSelecting(false);
+            window.dispatchEvent(new CustomEvent("floating-toolbar-update"));
+          }, 100);
+        }
+      }
+    };
+
+    editorElement.addEventListener("mousedown", handleMouseDown);
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+    editorElement.addEventListener("touchstart", handleTouchStart);
+    editorElement.addEventListener("touchmove", handleTouchMove);
+    editorElement.addEventListener("touchend", handleTouchEnd);
+    document.addEventListener("selectionchange", handleSelectionChange);
+
+    return () => {
+      editorElement.removeEventListener("mousedown", handleMouseDown);
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+      editorElement.removeEventListener("touchstart", handleTouchStart);
+      editorElement.removeEventListener("touchmove", handleTouchMove);
+      editorElement.removeEventListener("touchend", handleTouchEnd);
+      document.removeEventListener("selectionchange", handleSelectionChange);
+    };
+  }, [editor]);
+
+  if (!editor || !openDebounced) return null;
 
   return (
     <div
@@ -225,33 +332,31 @@ export const FloatingToolbarCustom = ({
       className="z-50"
     >
       <TooltipProvider>
-        <div className="w-full min-w-full mx-0 shadow-sm border rounded-sm bg-background">
+        <div className="w-full min-w-full mx-0 shadow-md border rounded-sm bg-background">
           <ToolbarProvider editor={editor}>
             <ScrollArea className="h-fit py-0.5 w-full">
-              <div className="flex items-center px-2 gap-0.5">
-                <div className="flex items-center gap-0.5 p-1">
-                  {/* Primary formatting */}
-                  <BoldToolbar />
-                  <ItalicToolbar />
-                  <UnderlineToolbar />
-                  <Separator orientation="vertical" className="h-6 mx-1" />
+              <div className="flex items-center gap-0.5">
+                {/* Primary formatting */}
+                <BoldToolbar />
+                <ItalicToolbar />
+                <UnderlineToolbar />
+                <Separator orientation="vertical" className="h-6 mx-1" />
 
-                  {/* Structure controls */}
-                  <HeadingsToolbar />
-                  <BulletListToolbar />
-                  <OrderedListToolbar />
-                  <Separator orientation="vertical" className="h-6 mx-1" />
+                {/* Structure controls */}
+                <HeadingsToolbar />
+                <BulletListToolbar />
+                <OrderedListToolbar />
+                <Separator orientation="vertical" className="h-6 mx-1" />
 
-                  {/* Rich formatting */}
-                  <ColorHighlightToolbar />
-                  <LinkToolbar />
-                  <ImagePlaceholderToolbar />
-                  <Separator orientation="vertical" className="h-6 mx-1" />
+                {/* Rich formatting */}
+                {/* <ColorHighlightToolbar /> */}
+                <LinkToolbar />
+                {/* <ImagePlaceholderToolbar /> */}
+                <Separator orientation="vertical" className="h-6 mx-1" />
 
-                  {/* Additional controls */}
-                  <AlignmentTooolbar />
-                  <BlockquoteToolbar />
-                </div>
+                {/* Additional controls */}
+                {/* <AlignmentTooolbar /> */}
+                <BlockquoteToolbar />
               </div>
               <ScrollBar className="h-0.5" orientation="horizontal" />
             </ScrollArea>
