@@ -71,7 +71,7 @@ export const EditorToolbar = ({ editor }: { editor: Editor }) => {
                 <SearchAndReplaceToolbar />
               </div>
             </div>
-            <ScrollBar className="hidden" orientation="horizontal" />
+            <ScrollBar className="block" orientation="horizontal" />
           </ScrollArea>
         </TooltipProvider>
       </ToolbarProvider>

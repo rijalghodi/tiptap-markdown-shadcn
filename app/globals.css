@@ -121,3 +121,29 @@
     @apply cursor-pointer;
   }
 }
+
+/* Custom Scrollbar Styles */
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #cccccc transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: #cccccc;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  width: 12px;
+}

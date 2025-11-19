@@ -98,7 +98,7 @@ export default function Home() {
               <textarea
                 className={cn(
                   "min-h-0 w-full flex-1 resize-none font-mono border border-input rounded-lg bg-background p-4 text-sm text-foreground placeholder:text-muted-foreground",
-                  "focus:outline-none focus:ring-none"
+                  "focus:outline-none focus:ring-none max-h-[calc(100dvh-10rem)]"
                 )}
                 value={markdownInput}
                 onChange={(e) => setMarkdownInput(e.target.value)}
@@ -114,7 +114,7 @@ export default function Home() {
             </h2>
             <div className="flex min-h-0 flex-1">
               <RichTextEditorDemo
-                className="h-full w-full rounded-xl"
+                className="h-full w-full rounded-xl max-h-[calc(100dvh-10rem)]"
                 ref={editorRef}
               />
             </div>
