@@ -28,6 +28,10 @@ import Placeholder from "@tiptap/extension-placeholder";
 import { content } from "@/lib/content";
 import { forwardRef, useImperativeHandle } from "react";
 import FloatingMenu from "@tiptap/extension-floating-menu";
+import {
+  SlashCommandExtension,
+  SlashCommand,
+} from "./extensions/slash-command";
 
 const extensions = [
   StarterKit.configure({
@@ -79,15 +83,7 @@ const extensions = [
   SearchAndReplace,
   Typography,
   Markdown,
-  // FloatingMenu.configure({
-  //   // element:
-  //   //   typeof document !== "undefined"
-  //   //     ? (document.querySelector(".floating-menu") as HTMLElement)
-  //   //     : undefined,
-  //   // shouldShow: () => {
-  //   //   return true;
-  //   // },
-  // }),
+  SlashCommandExtension,
 ];
 
 export interface RichTextEditorRef {
@@ -150,14 +146,9 @@ export const RichTextEditorDemo = forwardRef<
       )}
     >
       <EditorToolbar editor={editor} />
-      <FloatingToolbar editor={editor} />
-      <TipTapFloatingMenu editor={editor} />
-
-      {/* <div className="floating-menu">
-        <button>Bold</button>
-        <button>Italic</button>
-      </div> */}
-
+      {/* <FloatingToolbar editor={editor} />
+      <TipTapFloatingMenu editor={editor} /> */}
+      <SlashCommand editor={editor} />
       <EditorContent
         editor={editor}
         className=" min-h-[600px] w-full min-w-full cursor-text"
