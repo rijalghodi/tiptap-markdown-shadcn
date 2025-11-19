@@ -263,7 +263,7 @@ export const FloatingToolbarCustom = ({
       className="z-50"
     >
       <TooltipProvider>
-        <div className="w-full min-w-full mx-0 shadow-md border rounded-sm bg-background">
+        <div className="w-full min-w-full mx-0 shadow-md border rounded-md bg-background">
           <ToolbarProvider editor={editor}>
             <ScrollArea className="h-fit py-0.5 w-full">
               <div className="flex items-center gap-0.5">
